@@ -1,8 +1,8 @@
 import requests
-import sys
-import os
 import json
+import os
 import time
+import sys
 from colorama import Fore, init
 
 init(autoreset=True)
@@ -10,11 +10,25 @@ init(autoreset=True)
 AUTH_SERVER = "https://tabbo-auth.vercel.app/api/auth"
 LOOKUP_API = "https://tabbo-proxy.vercel.app/api/search?mobile="
 
-HISTORY_FILE = "history.json"
+USERS_FILE = "users.json"
+LOG_FILE = "logs.json"
 
 
 def clear():
-    os.system("cls" if os.name == "nt" else "clear")
+    os.system("clear")
+
+
+def load_json(file):
+    try:
+        with open(file) as f:
+            return json.load(f)
+    except:
+        return {}
+
+
+def save_json(file,data):
+    with open(file,"w") as f:
+        json.dump(data,f,indent=2)
 
 
 def get_ip():
@@ -24,22 +38,35 @@ def get_ip():
         return "Unknown"
 
 
-def load_history():
+def login():
+
+    clear()
+
+    print(Fore.CYAN + """
+🔐 TOOL LOGIN
+
+Generate password contact admin
+Telegram : @tabbo73
+""")
+
+    password = input("🔑 Password : ")
 
     try:
-        with open(HISTORY_FILE) as f:
-            return json.load(f)
+
+        r = requests.get(AUTH_SERVER, params={"pass": password}).json()
+
+        if r.get("status") != "ok":
+
+            print("❌ Invalid password")
+            sys.exit()
+
     except:
-        return []
+
+        print("❌ Server error")
+        sys.exit()
 
 
-def save_history(data):
-
-    with open(HISTORY_FILE, "w") as f:
-        json.dump(data, f, indent=2)
-
-
-def banner(user, ip):
+def banner(user,credits):
 
     clear()
 
@@ -54,75 +81,24 @@ def banner(user, ip):
 
 """)
 
-    print(Fore.CYAN + "🚀 TABBO OSINT TOOL\n")
+
+    print(Fore.CYAN + "⚡ TABBO OSINT TOOL\n")
 
     print(Fore.GREEN + f"👤 User : {user}")
-    print(Fore.GREEN + f"🌐 IP   : {ip}\n")
+    print(Fore.GREEN + f"💳 Credits : {credits}\n")
 
 
-def login():
+def search(user,users):
 
-    clear()
+    if users[user]["credits"] <= 0:
 
-    print(Fore.YELLOW + """
-🔐 ACCESS LOGIN
-
-📩 Generate password contact admin
-Telegram : @tabbo73
-""")
-
-    password = input("🔑 Enter Password : ")
-
-    try:
-
-        r = requests.get(AUTH_SERVER, params={"pass": password}).json()
-
-        if r.get("status") != "ok":
-
-            print(Fore.RED + "\n❌ Access denied\n")
-            sys.exit()
-
-    except:
-
-        print("⚠️ Server error")
-        sys.exit()
-
-
-def show_results(data, number):
-
-    print(Fore.YELLOW + f"\n📊 RESULTS FOR : {number}\n")
-
-    if not isinstance(data, dict):
-
-        print("❌ No data found")
+        print("❌ No credits left")
+        input()
         return
 
-    for key in data:
+    number = input("📱 Mobile Number : ")
 
-        r = data[key]
-
-        print(Fore.CYAN + "━━━━━━━━ PERSONAL INFO ━━━━━━━━")
-
-        print("👤 Name      :", r.get("name","N/A"))
-        print("👨 Father    :", r.get("fname","N/A"))
-
-        print(Fore.CYAN + "━━━━━━━━ ADDRESS INFO ━━━━━━━━")
-
-        print("🏠 Address   :", r.get("address","N/A"))
-
-        print(Fore.CYAN + "━━━━━━━━ NETWORK INFO ━━━━━━━━")
-
-        print("📡 Circle    :", r.get("circle","N/A"))
-        print("🆔 ID        :", r.get("id","N/A"))
-
-        print(Fore.MAGENTA + "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-
-
-def lookup():
-
-    number = input(Fore.YELLOW + "📱 Enter Mobile Number : ")
-
-    print(Fore.CYAN + "\n🔎 Searching database...\n")
+    print("🔎 Searching...\n")
 
     time.sleep(1)
 
@@ -132,104 +108,82 @@ def lookup():
 
         data = r.json()
 
-        show_results(data, number)
+        if isinstance(data,dict):
 
-        history = load_history()
+            for k in data:
 
-        history.append(number)
+                r = data[k]
 
-        save_history(history)
+                if r.get("name"):
+                    print("👤 Name :",r["name"])
+
+                if r.get("fname"):
+                    print("👨 Father :",r["fname"])
+
+                if r.get("address"):
+                    print("🏠 Address :",r["address"])
+
+                if r.get("circle"):
+                    print("📡 Circle :",r["circle"])
+
+                print()
 
     except:
+        pass
 
-        print("❌ No result found")
+    users[user]["credits"] -= 1
+    users[user]["used"] += 1
 
-    input("↩ Press ENTER to return...")
+    save_json(USERS_FILE,users)
 
+    logs = load_json(LOG_FILE)
 
-def show_history():
+    logs[user] = {
+        "ip": users[user]["ip"],
+        "used": users[user]["used"]
+    }
 
-    history = load_history()
+    save_json(LOG_FILE,logs)
 
-    clear()
-
-    print(Fore.YELLOW + "\n📜 SEARCH HISTORY\n")
-
-    if not history:
-
-        print("❌ No history found")
-
-    else:
-
-        for i, num in enumerate(history,1):
-
-            print(f"{i}. {num}")
-
-    input("\nPress ENTER...")
+    input("Press Enter...")
 
 
-def clear_history():
-
-    save_history([])
-
-    print("🧹 History cleared")
-
-    time.sleep(1)
-
-
-def menu(user, ip):
+def menu(user,users):
 
     while True:
 
-        banner(user, ip)
+        banner(user,users[user]["credits"])
 
-        print(Fore.GREEN + """
-
-1️⃣  🔍 Search Mobile Number
-2️⃣  📜 Search History
-3️⃣  🧹 Clear History
-4️⃣  ❌ Exit Tool
-
+        print("""
+1 Search
+2 Exit
 """)
 
-        op = input("👉 Select option : ")
+        op = input("Select : ")
 
         if op == "1":
-
-            lookup()
+            search(user,users)
 
         elif op == "2":
-
-            show_history()
-
-        elif op == "3":
-
-            clear_history()
-
-        elif op == "4":
-
-            print("👋 Tool closed")
-
-            sys.exit()
-
-        else:
-
-            print("⚠️ Invalid option")
-
-            time.sleep(1)
+            exit()
 
 
-def main():
+login()
 
-    login()
+users = load_json(USERS_FILE)
 
-    user = os.getlogin()
+username = input("Username : ")
 
-    ip = get_ip()
+ip = get_ip()
 
-    menu(user, ip)
+if username not in users:
 
+    users[username] = {
+        "credits":5,
+        "used":0,
+        "ip":ip
+    }
 
-if __name__ == "__main__":
+save_json(USERS_FILE,users)
 
-    main()
+menu(username,users)
