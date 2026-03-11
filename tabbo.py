@@ -1,5 +1,7 @@
 import requests
 import sys
+import os
+import time
 from colorama import Fore, Style, init
 
 init()
@@ -7,9 +9,17 @@ init()
 AUTH_SERVER = "https://tabbo-auth.vercel.app/api/auth"
 LOOKUP_API = "https://tabbo-info.vercel.app/api/lookup?key=tabbo02&mobile="
 
+
+def clear():
+    os.system("clear")
+
+
 def banner():
 
+    clear()
+
     print(Fore.CYAN + """
+
 ████████╗ █████╗ ██████╗ ██████╗ 
 ╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗
    ██║   ███████║██████╔╝██████╔╝
@@ -17,10 +27,25 @@ def banner():
    ██║   ██║  ██║██████╔╝██████╔╝
    ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═════╝
 
-TABBO INFO TOOL
-Credit ❤️ tabbo73
-Contact tg @tabbo73
+╔══════════════════════════════╗
+║        TABBO INFO TOOL       ║
+║      Credit ❤️ tabbo73       ║
+║      Contact @tabbo73        ║
+╚══════════════════════════════╝
+
 """)
+
+
+def loading():
+
+    print(Fore.GREEN + "🔎 Searching", end="")
+
+    for i in range(4):
+        time.sleep(0.4)
+        print(".", end="")
+
+    print("\n")
+
 
 def verify_password():
 
@@ -33,39 +58,84 @@ def verify_password():
 
         if data.get("status") != "ok":
 
-            print(Fore.RED + "❌ Invalid password")
+            print(Fore.RED + "\n❌ Invalid password\n")
             sys.exit()
 
-        print(Fore.GREEN + "✅ Access granted\n")
+        print(Fore.GREEN + "\n✅ Access granted\n")
 
     except:
 
-        print("❌ Server connection failed")
+        print(Fore.RED + "\n❌ Server connection failed\n")
         sys.exit()
+
+
+def show_result(data):
+
+    print(Fore.YELLOW + "\n📊 RESULT\n")
+
+    if isinstance(data, list):
+
+        for i, r in enumerate(data, 1):
+
+            print(Fore.CYAN + f"━━━━ RECORD {i} ━━━━")
+
+            print(Fore.GREEN + f"👤 Name   : {r.get('name','N/A')}")
+            print(f"👨 Father : {r.get('fname','N/A')}")
+            print(f"🏠 Address: {r.get('address','N/A')}")
+            print(f"☎ Alt    : {r.get('alt','N/A')}")
+            print(f"🆔 ID     : {r.get('id','N/A')}")
+
+            print(Fore.CYAN + "━━━━━━━━━━━━━━━━\n")
+
+    else:
+        print(data)
+
 
 def lookup():
 
     while True:
 
-        number = input("📱 Enter mobile number (or 'exit'): ")
+        print(Fore.GREEN + """
+1️⃣ Search Number
+2️⃣ Exit
+""")
 
-        if number.lower() == "exit":
-            break
+        op = input("Select option: ")
 
-        try:
+        if op == "1":
 
-            r = requests.get(LOOKUP_API + number)
+            number = input("\n📱 Enter mobile number: ")
 
-            print("\n📊 RESULT\n")
+            loading()
 
-            print(r.text)
+            try:
 
-            print("\n━━━━━━━━━━━━━━━━━━━━\n")
+                r = requests.get(LOOKUP_API + number)
 
-        except:
+                data = r.json()
 
-            print("❌ API error")
+                show_result(data)
 
+            except:
+
+                print(Fore.RED + "\n❌ API error\n")
+
+        elif op == "2":
+
+            print("\nBye 👋")
+            sys.exit()
+
+
+def main():
+
+    banner()
+
+    verify_password()
+
+    lookup()
+
+
+main()
 def main():
 
     banner()
