@@ -2,7 +2,6 @@ import requests
 import os
 import json
 import time
-import getpass
 from colorama import Fore, init
 
 init(autoreset=True)
@@ -26,13 +25,12 @@ def load_json(file):
         return []
 
 
-def save_json(file,data):
-    with open(file,"w") as f:
-        json.dump(data,f,indent=2)
+def save_json(file, data):
+    with open(file, "w") as f:
+        json.dump(data, f, indent=2)
 
 
-def banner(user,credits):
-
+def banner(user, credits):
     clear()
 
     print(Fore.RED + """
@@ -62,7 +60,6 @@ def banner(user,credits):
 
 
 def login():
-
     clear()
 
     print(Fore.CYAN + """
@@ -73,33 +70,50 @@ def login():
 Telegram : @tabbo73
 """)
 
-    password = getpass.getpass("Password : ")
+    password = input("Password : ")
 
     try:
-
         r = requests.get(AUTH_SERVER, params={"pass": password}).json()
 
         if r.get("status") != "ok":
+            print("❌ Invalid Password")
             exit()
 
     except:
+        print("Server Error")
         exit()
+
+
+def format_address(address):
+    parts = address.split("!")
+
+    labels = [
+        "Relation",
+        "Village",
+        "City",
+        "District",
+        "State",
+        "Pincode"
+    ]
+
+    for i, part in enumerate(parts):
+        if i < len(labels):
+            print(Fore.GREEN + f"{labels[i]} : " + Fore.YELLOW + part)
 
 
 def show_results(data, number):
 
     print(Fore.MAGENTA + f"""
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📱 RESULT FOR : {number}
+📱 RESULTS FOR : {number}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
 
     if not isinstance(data, dict) or len(data) == 0:
-
         print(Fore.RED + "\n❌ DATA NOT FOUND\n")
         return
 
-    for i,key in enumerate(data,1):
+    for i, key in enumerate(data, 1):
 
         r = data[key]
 
@@ -108,39 +122,48 @@ def show_results(data, number):
         print(Fore.BLUE + "╚══════════════════════════════╝")
 
         if r.get("name"):
-            print(Fore.YELLOW + "👤 Name :",r["name"])
+            print(Fore.YELLOW + "👤 Name : " + Fore.GREEN + r["name"])
 
         if r.get("fname"):
-            print(Fore.YELLOW + "👨 Father :",r["fname"])
+            print(Fore.YELLOW + "👨 Father : " + Fore.GREEN + r["fname"])
 
         if r.get("address"):
-            print(Fore.GREEN + "🏠 Address :",r["address"])
+            print(Fore.CYAN + "\n🏠 ADDRESS DETAILS")
+            format_address(r["address"])
 
         if r.get("circle"):
-            print(Fore.CYAN + "📡 Circle :",r["circle"])
+            print(Fore.MAGENTA + "\n📡 Circle : " + Fore.GREEN + r["circle"])
 
         if r.get("id"):
-            print(Fore.MAGENTA + "🆔 ID :",r["id"])
+            print(Fore.BLUE + "🆔 ID : " + Fore.GREEN + r["id"])
 
         print(Fore.RED + """
-──────────────────────────────
+────────────────────────────────────
 📩 Telegram : @tabbo73
 ⭐ Credit By TABBO
-──────────────────────────────
+────────────────────────────────────
 """)
 
 
-def search(user,users):
+def search(user, users):
 
     if users[user] <= 0:
-        print("❌ No credits left")
-        input()
+
+        print(Fore.RED + """
+
+❌ YOUR CREDITS FINISHED
+
+📩 Contact Admin For More Credits
+Telegram : @tabbo73
+
+""")
+
+        input("Press Enter...")
         return
 
     number = input("📱 Enter Mobile Number : ")
 
     print("🔎 Searching...\n")
-
     time.sleep(1)
 
     try:
@@ -152,23 +175,20 @@ def search(user,users):
         show_results(data, number)
 
         history = load_json(HISTORY_FILE)
-
         history.append(number)
-
-        save_json(HISTORY_FILE,history)
+        save_json(HISTORY_FILE, history)
 
     except:
         pass
 
     users[user] -= 1
+    save_json(USERS_FILE, users)
 
-    save_json(USERS_FILE,users)
-
+    print(Fore.YELLOW + f"\n💳 Remaining Credits : {users[user]}")
     input("Press Enter...")
 
 
 def history():
-
     data = load_json(HISTORY_FILE)
 
     print(Fore.CYAN + "\n📜 SEARCH HISTORY\n")
@@ -176,23 +196,19 @@ def history():
     if len(data) == 0:
         print("No history")
 
-    for i,n in enumerate(data,1):
-        print(f"{i}. {n}")
+    for i, n in enumerate(data, 1):
+        print(Fore.YELLOW + f"{i}. {n}")
 
-    input("\nEnter...")
+    input("\nPress Enter...")
 
 
 def clear_history():
-
-    save_json(HISTORY_FILE,[])
-
+    save_json(HISTORY_FILE, [])
     print("History cleared")
-
     input()
 
 
 def guide():
-
     print(Fore.GREEN + """
 
 📖 GUIDE
@@ -202,12 +218,10 @@ def guide():
 3 Each search costs 1 credit
 
 """)
-
     input()
 
 
 def about():
-
     print(Fore.YELLOW + """
 
 TABBO NUMBER INFO TOOL
@@ -216,15 +230,14 @@ Developer : TABBO
 Telegram  : @tabbo73
 
 """)
-
     input()
 
 
-def menu(user,users):
+def menu(user, users):
 
     while True:
 
-        banner(user,users[user])
+        banner(user, users[user])
 
         print(Fore.GREEN + "1️⃣  Search Number")
         print(Fore.CYAN + "2️⃣  History")
@@ -236,7 +249,7 @@ def menu(user,users):
         op = input("Select Option : ")
 
         if op == "1":
-            search(user,users)
+            search(user, users)
 
         elif op == "2":
             history()
@@ -263,6 +276,6 @@ username = os.getlogin()
 if username not in users:
     users[username] = 5
 
-save_json(USERS_FILE,users)
+save_json(USERS_FILE, users)
 
-menu(username,users)
+menu(username, users)
