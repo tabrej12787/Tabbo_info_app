@@ -3,14 +3,13 @@ import sys
 import os
 import json
 import time
-from colorama import Fore, Style, init
+from colorama import Fore, init
 
 init(autoreset=True)
 
 AUTH_SERVER = "https://tabbo-auth.vercel.app/api/auth"
 LOOKUP_API = "https://tabbo-proxy.vercel.app/api/search?mobile="
 
-USER_FILE = "users.json"
 HISTORY_FILE = "history.json"
 
 
@@ -18,79 +17,11 @@ def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def banner(user="Guest", credits=0):
-
-    clear()
-
-    print(Fore.MAGENTA + """
-
-████████╗ █████╗ ██████╗ ██████╗
-╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗
-   ██║   ███████║██████╔╝██████╔╝
-   ██║   ██╔══██║██╔══██╗██╔══██╗
-   ██║   ██║  ██║██████╔╝██████╔╝
-   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═════╝
-
-""")
-
-    print(Fore.CYAN + "╔══════════════════════════════╗")
-    print(Fore.CYAN + "        ⚡ TABBO OSINT TOOL ⚡")
-    print(Fore.CYAN + "╚══════════════════════════════╝\n")
-
-    print(Fore.YELLOW + "📡 Mobile Intelligence Lookup\n")
-
-    print(Fore.GREEN + f"👤 User    : {user}")
-    print(Fore.GREEN + f"💳 Credits : {credits}\n")
-
-
-def verify_password():
-
-    print(Fore.YELLOW + """
-╔══════════════════════════════╗
-🔒 ACCESS REQUIRED
-Generate password contact admin
-Telegram : @tabbo73
-╚══════════════════════════════╝
-""")
-
-    password = input("🔑 Enter Tool Password : ")
-
+def get_ip():
     try:
-
-        r = requests.get(
-            AUTH_SERVER,
-            params={"pass": password},
-            timeout=10
-        ).json()
-
-        if r.get("status") != "ok":
-
-            print(Fore.RED + "\n❌ Invalid password\n")
-            sys.exit()
-
-        print(Fore.GREEN + "\n✅ Access granted\n")
-        time.sleep(1)
-
+        return requests.get("https://api.ipify.org").text
     except:
-
-        print(Fore.RED + "\n❌ Server connection failed\n")
-        sys.exit()
-
-
-def load_users():
-
-    try:
-        with open(USER_FILE) as f:
-            return json.load(f)
-
-    except:
-        return {}
-
-
-def save_users(data):
-
-    with open(USER_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+        return "Unknown"
 
 
 def load_history():
@@ -98,7 +29,6 @@ def load_history():
     try:
         with open(HISTORY_FILE) as f:
             return json.load(f)
-
     except:
         return []
 
@@ -109,135 +39,197 @@ def save_history(data):
         json.dump(data, f, indent=2)
 
 
+def banner(user, ip):
+
+    clear()
+
+    print(Fore.MAGENTA + """
+
+████████╗ █████╗ ██████╗ ██████╗  ██████╗ 
+╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔═══██╗
+   ██║   ███████║██████╔╝██████╔╝██║   ██║
+   ██║   ██╔══██║██╔══██╗██╔══██╗██║   ██║
+   ██║   ██║  ██║██████╔╝██████╔╝╚██████╔╝
+   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═════╝  ╚═════╝
+
+""")
+
+    print(Fore.CYAN + "🚀 TABBO OSINT TOOL\n")
+
+    print(Fore.GREEN + f"👤 User : {user}")
+    print(Fore.GREEN + f"🌐 IP   : {ip}\n")
+
+
+def login():
+
+    clear()
+
+    print(Fore.YELLOW + """
+🔐 ACCESS LOGIN
+
+📩 Generate password contact admin
+Telegram : @tabbo73
+""")
+
+    password = input("🔑 Enter Password : ")
+
+    try:
+
+        r = requests.get(AUTH_SERVER, params={"pass": password}).json()
+
+        if r.get("status") != "ok":
+
+            print(Fore.RED + "\n❌ Access denied\n")
+            sys.exit()
+
+    except:
+
+        print("⚠️ Server error")
+        sys.exit()
+
+
 def show_results(data, number):
 
     print(Fore.YELLOW + f"\n📊 RESULTS FOR : {number}\n")
 
     if not isinstance(data, dict):
 
-        print(data)
+        print("❌ No data found")
         return
 
-    print(Fore.GREEN + f"Found {len(data)} record(s)\n")
-
-    for i, key in enumerate(data,1):
+    for key in data:
 
         r = data[key]
 
-        print(Fore.CYAN + "╔══════════════════════════════╗")
-        print(Fore.CYAN + f"        📂 RECORD {i}")
-        print(Fore.CYAN + "╚══════════════════════════════╝")
+        print(Fore.CYAN + "━━━━━━━━ PERSONAL INFO ━━━━━━━━")
 
-        print(Fore.GREEN + f"👤 Name     : {r.get('name','N/A')}")
-        print(Fore.GREEN + f"👨 Father   : {r.get('fname','N/A')}")
-        print(Fore.GREEN + f"🏠 Address  : {r.get('address','N/A')}")
-        print(Fore.GREEN + f"📡 Circle   : {r.get('circle','N/A')}")
-        print(Fore.GREEN + f"🆔 ID       : {r.get('id','N/A')}")
+        print("👤 Name      :", r.get("name","N/A"))
+        print("👨 Father    :", r.get("fname","N/A"))
+
+        print(Fore.CYAN + "━━━━━━━━ ADDRESS INFO ━━━━━━━━")
+
+        print("🏠 Address   :", r.get("address","N/A"))
+
+        print(Fore.CYAN + "━━━━━━━━ NETWORK INFO ━━━━━━━━")
+
+        print("📡 Circle    :", r.get("circle","N/A"))
+        print("🆔 ID        :", r.get("id","N/A"))
 
         print(Fore.MAGENTA + "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
 
-def lookup(user, users):
+def lookup():
 
-    if users[user] <= 0:
-
-        print(Fore.RED + "\n❌ No credits left\n")
-        input("Press enter...")
-        return
-
-    number = input(Fore.YELLOW + "\n📱 Enter mobile number : ")
+    number = input(Fore.YELLOW + "📱 Enter Mobile Number : ")
 
     print(Fore.CYAN + "\n🔎 Searching database...\n")
+
     time.sleep(1)
 
     try:
 
-        r = requests.get(LOOKUP_API + number, timeout=15)
+        r = requests.get(LOOKUP_API + number)
 
         data = r.json()
 
         show_results(data, number)
 
         history = load_history()
+
         history.append(number)
+
         save_history(history)
-
-        users[user] -= 1
-        save_users(users)
-
-        print(Fore.YELLOW + f"\n💳 Credits left : {users[user]}\n")
 
     except:
 
-        print(Fore.RED + "❌ API Error")
+        print("❌ No result found")
 
-    input(Fore.CYAN + "Press ENTER to continue...")
+    input("↩ Press ENTER to return...")
 
 
 def show_history():
 
-    data = load_history()
+    history = load_history()
 
-    if not data:
-        print("No history found")
+    clear()
+
+    print(Fore.YELLOW + "\n📜 SEARCH HISTORY\n")
+
+    if not history:
+
+        print("❌ No history found")
 
     else:
-        print("\n📜 SEARCH HISTORY\n")
 
-        for i,n in enumerate(data,1):
-            print(f"{i} - {n}")
+        for i, num in enumerate(history,1):
 
-    input("\nPress enter...")
+            print(f"{i}. {num}")
+
+    input("\nPress ENTER...")
 
 
-def menu(user, users):
+def clear_history():
+
+    save_history([])
+
+    print("🧹 History cleared")
+
+    time.sleep(1)
+
+
+def menu(user, ip):
 
     while True:
 
-        banner(user, users[user])
+        banner(user, ip)
 
         print(Fore.GREEN + """
 
-1️⃣  Single Lookup
-2️⃣  Search History
-3️⃣  Exit Tool
+1️⃣  🔍 Search Mobile Number
+2️⃣  📜 Search History
+3️⃣  🧹 Clear History
+4️⃣  ❌ Exit Tool
 
 """)
 
-        op = input(Fore.YELLOW + "Select option : ")
+        op = input("👉 Select option : ")
 
         if op == "1":
-            lookup(user, users)
+
+            lookup()
 
         elif op == "2":
+
             show_history()
 
         elif op == "3":
 
-            print(Fore.RED + "\nTool Closed 👋\n")
+            clear_history()
+
+        elif op == "4":
+
+            print("👋 Tool closed")
+
             sys.exit()
 
         else:
 
-            print("Invalid option")
+            print("⚠️ Invalid option")
+
             time.sleep(1)
 
 
 def main():
 
-    verify_password()
+    login()
 
-    users = load_users()
+    user = os.getlogin()
 
-    user = input(Fore.YELLOW + "👤 Enter username : ")
+    ip = get_ip()
 
-    if user not in users:
-        users[user] = 5
-
-    save_users(users)
-
-    menu(user, users)
+    menu(user, ip)
 
 
 if __name__ == "__main__":
+
     main()
