@@ -132,7 +132,7 @@ The developer is not responsible for misuse or illegal activities performed usin
 
 TABBO
 
-Telegram : https://t.me/tabbo73
+Telegram : https://t.me/tabboinfo1
 
 ---
 
