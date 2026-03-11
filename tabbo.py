@@ -1,71 +1,259 @@
 import requests
 import sys
 import os
-import time
 import json
-from colorama import Fore, Style, init
+import time
+from colorama import init
 
-init(autoreset=True)
+init()
 
 AUTH_SERVER = "https://tabbo-auth.vercel.app/api/auth"
 LOOKUP_API = "https://tabbo-info.vercel.app/api/lookup?key=tabbo02&mobile="
+
+USER_FILE = "users.json"
+HISTORY_FILE = "history.json"
 
 
 def clear():
     os.system("clear")
 
 
-def banner():
+def banner(user, credits):
 
     clear()
 
-    print(Fore.CYAN + """
-
-████████╗ █████╗ ██████╗ ██████╗ 
-╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗
-   ██║   ███████║██████╔╝██████╔╝
-   ██║   ██╔══██║██╔══██╗██╔══██╗
-   ██║   ██║  ██║██████╔╝██████╔╝
-   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═════╝
-
-╔════════════════════════════════╗
-║         TABBO INFO TOOL        ║
-║      Cyber OSINT Scanner       ║
-║      Credit ❤️ tabbo73         ║
-║      Contact @tabbo73          ║
-╚════════════════════════════════╝
-
+    print("""
+\033[95m████████╗\033[96m █████╗\033[92m ██████╗\033[93m ██████╗
+\033[95m╚══██╔══╝\033[96m██╔══██╗\033[92m██╔══██╗\033[93m██╔══██╗
+\033[95m   ██║   \033[96m███████║\033[92m██████╔╝\033[93m██████╔╝
+\033[95m   ██║   \033[96m██╔══██║\033[92m██╔══██╗\033[93m██╔══██╗
+\033[95m   ██║   \033[96m██║  ██║\033[92m██████╔╝\033[93m██████╔╝
+\033[95m   ╚═╝   \033[96m╚═╝  ╚═╝\033[92m╚═════╝ \033[93m╚═════╝
 """)
 
+    print("\033[95m╔══════════════════════════════╗")
+    print("\033[95m        ⚡ TABBO OSINT TOOL ⚡")
+    print("\033[95m╚══════════════════════════════╝")
 
-def loading():
+    print("\033[93mMobile Info Lookup Engine\n")
 
-    print(Fore.GREEN + "🔎 Scanning database", end="")
-
-    for i in range(5):
-        time.sleep(0.4)
-        print(".", end="")
-
-    print("\n")
+    print(f"\033[92m👤 User    : {user}")
+    print(f"\033[92m💳 Credits : {credits}\n")
 
 
 def verify_password():
 
-    password = input(Fore.YELLOW + "🔒 Enter Tool Password: ")
+    print("""
+╔════════════════════════════════╗
+🔒 ACCESS REQUIRED
+
+Generate password contact admin
+
+Telegram : @tabbo73
+╚════════════════════════════════╝
+""")
+
+    password = input("🔒 Enter Tool Password : ")
 
     try:
 
-        r = requests.get(AUTH_SERVER, params={"pass": password})
-        data = r.json()
+        r = requests.get(AUTH_SERVER, params={"pass": password}).json()
 
-        if data.get("status") != "ok":
+        if r.get("status") != "ok":
 
-            print(Fore.RED + "\n❌ Invalid password\n")
+            print("\n❌ Invalid password")
+            print("📩 Generate password contact admin")
+            print("Telegram : @tabbo73\n")
+
             sys.exit()
 
-        print(Fore.GREEN + "\n✅ Access granted\n")
-        time.sleep(1)
+        clear()
 
+        print("✅ Access granted\n")
+
+    except:
+
+        print("❌ Server connection failed")
+        sys.exit()
+
+
+def load_users():
+    try:
+        with open(USER_FILE) as f:
+            return json.load(f)
+    except:
+        return {}
+
+
+def save_users(data):
+    with open(USER_FILE,"w") as f:
+        json.dump(data,f,indent=2)
+
+
+def load_history():
+    try:
+        with open(HISTORY_FILE) as f:
+            return json.load(f)
+    except:
+        return []
+
+
+def save_history(data):
+    with open(HISTORY_FILE,"w") as f:
+        json.dump(data,f,indent=2)
+
+
+def show_results(data, number):
+
+    print("\n\033[93mRESULTS FOR :", number)
+
+    if not isinstance(data, dict):
+        print(data)
+        return
+
+    print(f"\n\033[92mFound {len(data)} record(s)\n")
+
+    for i, key in enumerate(data,1):
+
+        r = data[key]
+
+        print("\033[96m━━━━━━━━ RECORD", i, "━━━━━━━━\n")
+
+        print("\033[93mPERSONAL INFORMATION")
+        print("\033[92mName   :", r.get("name","NA"))
+        print("\033[92mFather :", r.get("fname","NA"))
+
+        print("\n\033[93mADDRESS DETAILS")
+        print("\033[92mLocation :", r.get("address","NA"))
+
+        print("\n\033[93mNETWORK INFO")
+        print("\033[92mCircle :", r.get("circle","NA"))
+        print("\033[92mID     :", r.get("id","NA"))
+
+        print("\n\033[96m━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+
+
+def lookup(user, users):
+
+    if users[user] <= 0:
+        print("❌ No credits left")
+        input("Press enter...")
+        return
+
+    number = input("\n📱 Enter mobile number : ")
+
+    print("🔎 Searching...")
+    time.sleep(1)
+
+    try:
+
+        r = requests.get(LOOKUP_API + number)
+        data = r.json()
+
+        show_results(data, number)
+
+        history = load_history()
+        history.append(number)
+        save_history(history)
+
+        users[user] -= 1
+        save_users(users)
+
+        print(f"\n💳 Credits left : {users[user]}\n")
+
+    except:
+        print("❌ API Error")
+
+    input("Press enter...")
+
+
+def history():
+
+    data = load_history()
+
+    if not data:
+        print("No history found")
+    else:
+        print("\n📜 SEARCH HISTORY\n")
+
+        for i,n in enumerate(data,1):
+            print(f"{i} - {n}")
+
+    input("\nPress enter...")
+
+
+def statistics():
+
+    users = load_users()
+    history_data = load_history()
+
+    print("\n📊 STATISTICS\n")
+
+    print(f"Total Users : {len(users)}")
+    print(f"Total Searches : {len(history_data)}")
+
+    input("\nPress enter...")
+
+
+def clear_history():
+
+    save_history([])
+    print("History cleared")
+    input("Press enter...")
+
+
+def menu(user, users):
+
+    while True:
+
+        banner(user, users[user])
+
+        print("""
+╔════════════ MAIN MENU ════════════╗
+[1] 🔎 Single Lookup
+[2] 📜 Search History
+[3] 📊 Statistics
+[4] 🧹 Clear History
+[5] ❌ Exit
+╚═══════════════════════════════════╝
+""")
+
+        op = input("Select option : ")
+
+        if op == "1":
+            lookup(user, users)
+
+        elif op == "2":
+            history()
+
+        elif op == "3":
+            statistics()
+
+        elif op == "4":
+            clear_history()
+
+        elif op == "5":
+            print("Bye 👋")
+            sys.exit()
+
+
+def main():
+
+    verify_password()
+
+    users = load_users()
+
+    user = input("👤 Enter username : ")
+
+    if user not in users:
+        users[user] = 5
+
+    save_users(users)
+
+    menu(user, users)
+
+
+main()
     except:
 
         print(Fore.RED + "\n❌ Server connection failed\n")
