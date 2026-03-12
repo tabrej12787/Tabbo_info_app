@@ -3,11 +3,19 @@ import os
 import json
 import time
 from colorama import Fore, init
+from dotenv import load_dotenv
 
 init(autoreset=True)
 
-AUTH_SERVER = "https://tabbo-auth.vercel.app/api/auth"
-LOOKUP_API = "https://tabbo-proxy.vercel.app/api/search?mobile="
+# Load environment variables
+load_dotenv()
+
+AUTH_SERVER = os.getenv("TABBO_AUTH")
+LOOKUP_API = os.getenv("TABBO_API")
+
+if not AUTH_SERVER or not LOOKUP_API:
+    print("❌ API not configured. Setup .env file")
+    exit()
 
 USERS_FILE = "users.json"
 HISTORY_FILE = "history.json"
@@ -72,8 +80,7 @@ def login():
 Telegram : @tabbo73
 """)
 
-    print(Fore.YELLOW + "Password : ", end="")
-    password = input()
+    password = input("Password : ")
 
     try:
 
