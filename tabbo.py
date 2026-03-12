@@ -2,20 +2,19 @@ import requests
 import os
 import json
 import time
+import base64
 from colorama import Fore, init
-from dotenv import load_dotenv
 
 init(autoreset=True)
 
-# Load environment variables
-load_dotenv()
+# Hidden API (encoded)
+AUTH_SERVER = base64.b64decode(
+"aHR0cHM6Ly90YWJiby1hdXRoLnZlcmNlbC5hcHAvYXBpL2F1dGg="
+).decode()
 
-AUTH_SERVER = os.getenv("TABBO_AUTH")
-LOOKUP_API = os.getenv("TABBO_API")
-
-if not AUTH_SERVER or not LOOKUP_API:
-    print("❌ API not configured. Setup .env file")
-    exit()
+LOOKUP_API = base64.b64decode(
+"aHR0cHM6Ly90YWJiby1wcm94eS52ZXJjZWwuYXBwL2FwaS9zZWFyY2g/bW9iaWxlPQ=="
+).decode()
 
 USERS_FILE = "users.json"
 HISTORY_FILE = "history.json"
