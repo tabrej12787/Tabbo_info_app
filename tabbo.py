@@ -2,19 +2,45 @@ import requests
 import os
 import json
 import time
+import base64
 import sys
 from colorama import Fore, init
 from datetime import datetime
 
 init(autoreset=True)
 
-AUTH_SERVER = "https://tabbo-auth.vercel.app/api/auth"
-LOOKUP_API = "https://tabbo-proxy.vercel.app/api/search?mobile="
+# 🔐 AUTH SERVER
+AUTH_SERVER = base64.b64decode(
+"aHR0cHM6Ly90YWJiby1hdXRoLnZlcmNlbC5hcHAvYXBpL2F1dGg="
+).decode()
 
 HISTORY_FILE = "history.json"
 LIMIT_FILE = "limit.json"
 
 DAILY_LIMIT = 15
+
+
+# 🔐 Hidden Proxy API (split + base64)
+def hidden_api():
+
+    a1="aHR0c"
+    a2="HM6Ly"
+    a3="90YWJ"
+    a4="iby1w"
+    a5="cm94e"
+    a6="S52ZX"
+    a7="JjZWw"
+    a8="uYXBw"
+    a9="L2Fwa"
+    a10="S9zZW"
+    a11="FyY2g"
+    a12="/bW9i"
+    a13="aWxlP"
+    a14="Q=="
+
+    x=a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12+a13+a14
+
+    return base64.b64decode(x).decode()
 
 
 def clear():
@@ -26,8 +52,7 @@ def banner(user, remaining):
     clear()
 
     print(Fore.RED + r"""
-
-████████╗ █████╗ ██████╗ ██████╗  ██████╗
+████████╗ █████╗ ██████╗ ██████╗  ██████╗ 
 ╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔═══██╗
    ██║   ███████║██████╔╝██████╔╝██║   ██║
    ██║   ██╔══██║██╔══██╗██╔══██╗██║   ██║
@@ -37,14 +62,14 @@ def banner(user, remaining):
         🔎 TABBO NUMBER INFO TOOL 🔎
 """)
 
-    print(Fore.CYAN + "┌─────────────────────────────┐")
-    print(Fore.CYAN + "          USER INFO")
-    print(Fore.CYAN + "└─────────────────────────────┘")
+    print(Fore.CYAN + "┌──────────────────────────────┐")
+    print(Fore.CYAN + "           USER PANEL")
+    print(Fore.CYAN + "└──────────────────────────────┘")
 
-    print(Fore.GREEN + f"👤 User Name : {user}")
-    print(Fore.YELLOW + f"⭐ Credits   : {remaining}\n")
+    print(Fore.GREEN + f"👤 User : {user}")
+    print(Fore.YELLOW + f"⭐ Remaining Search : {remaining}\n")
 
-    print(Fore.GREEN + "⭐ Credit By TABBO\n")
+    print(Fore.MAGENTA + "📩 Telegram : @tabbo73\n")
 
 
 def load_json(file, default):
@@ -82,9 +107,9 @@ def login():
     clear()
 
     print(Fore.CYAN + """
-╔════════════════════════════════╗
+╔══════════════════════════════╗
             🔐 LOGIN
-╚════════════════════════════════╝
+╚══════════════════════════════╝
 Telegram : @tabbo73
 """)
 
@@ -98,43 +123,62 @@ Telegram : @tabbo73
             print(Fore.RED + "❌ Invalid Password")
             sys.exit()
 
-    except Exception as e:
-        print("Login Error:", e)
+    except:
+        print("Server Error")
         sys.exit()
 
 
 def show_results(data, number):
 
     print(Fore.MAGENTA + f"""
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📱 RESULTS FOR : {number}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📱 RESULT FOR : {number}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
 
     if not data.get("success"):
-        print(Fore.RED + "\n❌ DATA NOT FOUND\n")
+        print(Fore.RED + "❌ DATA NOT FOUND\n")
         return
 
     records = data.get("result", [])
 
-    for i, r in enumerate(records, 1):
+    for i, r in enumerate(records,1):
 
-        print(Fore.BLUE + "╔══════════════════════════════╗")
-        print(Fore.BLUE + f"         RECORD {i}")
-        print(Fore.BLUE + "╚══════════════════════════════╝")
+        print(Fore.BLUE + "╔══════════════════════════╗")
+        print(Fore.BLUE + f"        RECORD {i}")
+        print(Fore.BLUE + "╚══════════════════════════╝")
 
         print(Fore.YELLOW + "👤 Name : " + Fore.CYAN + str(r.get("name","")))
         print(Fore.YELLOW + "👨 Father : " + Fore.CYAN + str(r.get("father_name","")))
-        print(Fore.GREEN + "🏠 Address : " + Fore.CYAN + str(r.get("address","")))
-        print(Fore.GREEN + "📡 Circle : " + Fore.CYAN + str(r.get("circle","")))
+
+        if r.get("address"):
+
+            print(Fore.GREEN + "\n🏠 ADDRESS DETAILS")
+
+            addr=r["address"].split(" ")
+
+            labels=["Village","City","District","State","Pincode"]
+
+            for i,part in enumerate(addr[:5]):
+
+                part=part.strip()
+
+                if part and i<len(labels):
+
+                    print(
+                        Fore.YELLOW+"   "+labels[i]+
+                        Fore.MAGENTA+" : "+
+                        Fore.CYAN+part
+                    )
+
+        print(Fore.GREEN + "\n📡 Circle : " + Fore.CYAN + str(r.get("circle","")))
         print(Fore.YELLOW + "📞 Alternate : " + Fore.CYAN + str(r.get("alt_mobile","")))
         print(Fore.MAGENTA + "🆔 ID : " + Fore.CYAN + str(r.get("id_number","")))
 
         print(Fore.RED + """
-────────────────────────────────────
-📩 Telegram : @tabbo73
+────────────────────────────────
 ⭐ Credit By TABBO
-────────────────────────────────────
+────────────────────────────────
 """)
 
 
@@ -148,63 +192,61 @@ def search(user):
         input("Press Enter...")
         return
 
-    number = input("📱 Enter Mobile Number : ").strip()
+    number=input("📱 Enter Mobile Number : ").strip()
 
     print("🔎 Searching...\n")
     time.sleep(1)
 
     try:
 
-        day = datetime.now().day
-        key = "tabbo786" + str(day)
+        day=datetime.now().day
+        key="tabbo786"+str(day)
 
-        url = LOOKUP_API + number + "&k=" + key
+        url=hidden_api()+number+"&k="+key
 
-        r = requests.get(url, timeout=10)
+        r=requests.get(url)
 
-        result = r.json()
+        result=r.json()
 
-        show_results(result, number)
+        show_results(result,number)
 
-        history = load_json(HISTORY_FILE, [])
+        history=load_json(HISTORY_FILE,[])
         history.append(number)
-        save_json(HISTORY_FILE, history)
+        save_json(HISTORY_FILE,history)
 
-    except Exception as e:
+    except:
 
-        print("API Error:", e)
+        print("API Error")
 
-    data[user]["count"] += 1
-    save_json(LIMIT_FILE, data)
+    data[user]["count"]+=1
+    save_json(LIMIT_FILE,data)
 
-    remaining = DAILY_LIMIT - data[user]["count"]
+    remaining=DAILY_LIMIT-data[user]["count"]
 
-    print(Fore.YELLOW + f"\n🔎 Remaining Searches : {remaining}")
+    print(Fore.YELLOW+f"\n🔎 Remaining Searches : {remaining}")
 
     input("Press Enter...")
 
 
 def history():
 
-    data = load_json(HISTORY_FILE, [])
+    data=load_json(HISTORY_FILE,[])
 
-    print(Fore.CYAN + "\n📜 SEARCH HISTORY\n")
+    print(Fore.CYAN+"\n📜 SEARCH HISTORY\n")
 
-    if len(data) == 0:
+    if len(data)==0:
         print("No history")
 
-    for i, n in enumerate(data, 1):
-        print(Fore.YELLOW + f"{i}. {n}")
+    for i,n in enumerate(data,1):
+        print(Fore.YELLOW+f"{i}. {n}")
 
     input("\nPress Enter...")
 
 
 def clear_history():
 
-    save_json(HISTORY_FILE, [])
-
+    save_json(HISTORY_FILE,[])
     print("History cleared")
-
     input()
 
 
@@ -212,34 +254,33 @@ def menu(user):
 
     while True:
 
-        data = check_limit(user)
+        data=check_limit(user)
+        remaining=DAILY_LIMIT-data[user]["count"]
 
-        remaining = DAILY_LIMIT - data[user]["count"]
+        banner(user,remaining)
 
-        banner(user, remaining)
+        print(Fore.GREEN+"1️⃣  Search Number")
+        print(Fore.CYAN+"2️⃣  History")
+        print(Fore.MAGENTA+"3️⃣  Clear History")
+        print(Fore.RED+"4️⃣  Exit\n")
 
-        print(Fore.GREEN + "1️⃣  Search Number")
-        print(Fore.CYAN + "2️⃣  History")
-        print(Fore.MAGENTA + "3️⃣  Clear History")
-        print(Fore.RED + "4️⃣  Exit\n")
+        op=input("Select Option : ")
 
-        op = input("Select Option : ")
-
-        if op == "1":
+        if op=="1":
             search(user)
 
-        elif op == "2":
+        elif op=="2":
             history()
 
-        elif op == "3":
+        elif op=="3":
             clear_history()
 
-        elif op == "4":
+        elif op=="4":
             sys.exit()
 
 
 login()
 
-username = os.getlogin()
+username=os.getlogin()
 
 menu(username)
