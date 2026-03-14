@@ -2,16 +2,14 @@ import requests
 import os
 import json
 import time
-import base64
 import sys
 from colorama import Fore, init
 from datetime import datetime
 
 init(autoreset=True)
 
-AUTH_SERVER = base64.b64decode(
-"aHR0cHM6Ly90YWJiby1hdXRoLnZlcmNlbC5hcHAvYXBpL2F1dGg="
-).decode()
+AUTH_SERVER = "https://tabbo-auth.vercel.app/api/auth"
+LOOKUP_API = "https://tabbo-proxy.vercel.app/api/search?mobile="
 
 HISTORY_FILE = "history.json"
 LIMIT_FILE = "limit.json"
@@ -45,6 +43,7 @@ def banner(user, remaining):
 
     print(Fore.GREEN + f"👤 User Name : {user}")
     print(Fore.YELLOW + f"⭐ Credits   : {remaining}\n")
+
     print(Fore.GREEN + "⭐ Credit By TABBO\n")
 
 
@@ -112,7 +111,6 @@ def show_results(data, number):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """)
 
-    # FIX BOOL ERROR
     if not isinstance(data, dict):
         print(Fore.RED + "\n❌ INVALID API RESPONSE\n")
         return
@@ -202,7 +200,7 @@ def search(user):
         day = datetime.now().day
         key = "tabbo786" + str(day)
 
-        url = hidden_api() + number + "&k=" + key
+        url = LOOKUP_API + number + "&k=" + key
 
         r = requests.get(url, timeout=10)
 
@@ -246,7 +244,9 @@ def history():
 def clear_history():
 
     save_json(HISTORY_FILE, [])
+
     print("History cleared")
+
     input()
 
 
@@ -278,19 +278,6 @@ def menu(user):
 
         elif op == "4":
             sys.exit()
-
-
-def hidden_api():
-
-    p1="aHR0cHM6Ly90YW"
-    p2="Jiby1wcm94eS52"
-    p3="ZXJjZWwuYXBwL2"
-    p4="FwaS9zZWFyY2g/"
-    p5="bW9iaWxlPQ=="
-
-    url = p1+p2+p3+p4+p5
-
-    return base64.b64decode(url).decode().strip()
 
 
 login()
